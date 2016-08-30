@@ -7,12 +7,14 @@
 #include <math.h>
 #include <iostream>
 #include <fstream>
+
 using namespace std;
 #pragma warning(disable:4996)
 
-#define TOL 0.0000001            //dla metody iteracyjnej LU 10 ^ -6
-#define TOLF 0.0000001
-int loop = 50;
+//double tmax = 0.1;
+//double dt = 0.01;
+//double h = 0.2;
+
 double tmax = 0.5;
 double dt = 0.001;
 double h = 0.1;
@@ -27,23 +29,7 @@ double war_poczatkowy(double x)
 {
 	return 1.0 + cos(M_PI*x);
 }
-
-double est(double *X, double *x_nowe)
-{
-	double x[4];
-	x[0] = fabs(X[0] - x_nowe[0]);
-	x[1] = fabs(X[1] - x_nowe[1]);
-	x[2] = fabs(X[2] - x_nowe[2]);
-	x[3] = fabs(X[3] - x_nowe[3]);
-
-	double max = x[0];
-	if (x[1] > max) max = x[1];
-	if (x[2] > max) max = x[2];
-	if (x[3] > max) max = x[3];
-
-	return max;
-}
-
+/*
 double res(double * l, double *d, double *u, double *b, double *x_nowe, int rozmiar) //przekazuje macierz A i x nowe wyliczam wektor Ax-b i licze z niego maximum czyli najwieksza bezwzgledna wartosc  tego wektora
 {
 	double *Ax = new double[rozmiar];
@@ -68,6 +54,7 @@ double resM(double * M, double *b, double *x_nowe, int rozmiar)
 {
 	return 0.0;
 }
+*/
 
 double maxblad(double *BLAD_thomas, int rozmiar)
 {
@@ -75,7 +62,8 @@ double maxblad(double *BLAD_thomas, int rozmiar)
 
 	for (int i = 1; i < rozmiar; i++)   //szukam najwiekszego bledu
 	{
-		if (BLAD_thomas[i] > max) max = BLAD_thomas[i];
+		if (BLAD_thomas[i] > max) 
+			max = BLAD_thomas[i];
 	}
 
 	return max;
@@ -135,12 +123,13 @@ double * AlgorytmThomasa(double * l, double *d, double *u, double *b, double *x,
 	for (int i = 0; i < rozmiar - 1; i++)
 	{
 		ni[i + 1] = d[i + 1] - ((l[i] * u[i]) / ni[i]);
-
 	}
 
 	bb[0] = b[0];
 	for (int i = 0; i < rozmiar - 1; i++)
+	{
 		bb[i + 1] = b[i + 1] - ((l[i] * bb[i]) / ni[i]);
+	}
 
 	x[rozmiar - 1] = bb[rozmiar - 1] / ni[rozmiar - 1];
 
@@ -232,7 +221,6 @@ void gaussianEliminate(double **matrix, int ip, int jp, int rozmiar)
 			matrix[i][j] = matrix[i][j] - matrix[i][jp] * matrix[ip][j];
 		}
 	}
-
 }
 
 void printMatrix(double **matrix, int rozmiar)
@@ -292,31 +280,30 @@ void rozwiaz_rownanie(double a, double b, double h)
 	}
 
 	int rozmiar = static_cast<int>(fabs(a - b) / h) + 1;
+	//tworze macierze l,d,u i vektor b
 	double *l = new double[rozmiar - 1];
 	double *d = new double[rozmiar];
 	double *u = new double[rozmiar - 1];
-	double *vecb;
+	double *vecb = new double[rozmiar + 1];
 	double *Uk_thomas = new double[rozmiar];
 	double *Uk_LU = new double[rozmiar];
+	double *x = new double[rozmiar + 1];
 
 	double *BLAD_thomas = new double[rozmiar];
 	double *BLAD_LU = new double[rozmiar];
 
-	int index = 0;
-
-	//tworze macierze l,d,u i vektor b
+	
 	double **M = new double*[rozmiar];
 	for (int j = 0; j<rozmiar; j++)
 	{
 		M[j] = new double[rozmiar];
 	}
-
-	vecb = new double[rozmiar + 1];
-	double *x = new double[rozmiar + 1];
+	
 
 	printf("T\t NUMERYCzNIE \t ANALITYCZNIE");
 
-	for (double x = a; x < b; x += h)    //uzupelniam Uk z war poczatkowego , potrzebne do vectora b na starcie programu
+	int index = 0;
+	for (double x = a; x <= b; x += h)    //uzupelniam Uk z war poczatkowego , potrzebne do vectora b na starcie programu
 	{
 		Uk_thomas[index] = war_poczatkowy(x);
 		Uk_LU[index] = war_poczatkowy(x);
@@ -325,26 +312,28 @@ void rozwiaz_rownanie(double a, double b, double h)
 	}
 
 	uzupelnijLDUB(l, d, u, vecb, Uk_thomas, rozmiar);
-	uzupelnijLDUB(l, d, u, vecb, Uk_LU, rozmiar);
+	//uzupelnijLDUB(l, d, u, vecb, Uk_LU, rozmiar);
 
 	for (int k = 0; k < rozmiar; k++)
 	{
 		for (int i = 0; i < rozmiar; i++)
 		{
-			if (k == i + 1)
+			if (i == k - 1)
+			{
 				M[k][i] = l[i];
+			}
+			else if (i == k + 1)
+			{
+				M[k][i] = u[k];
+			}
+			else if (i == k)
+			{
+				M[k][i] = d[k];		
+			}
 			else
 			{
-				if (i == k + 1)
-					M[k][i] = u[k];
-				else
-				{
-					if (k == i)
-						M[k][i] = d[k];
-					else
-						M[k][i] = 0.0;
-				}
-			}
+				M[k][i] = 0.0;
+			}	
 		}
 	}
 
@@ -358,7 +347,7 @@ void rozwiaz_rownanie(double a, double b, double h)
 		printf("   T\t  h\t  X  \t    THOMAS \t   LU              ANALITYCZNIE:\tBLAD(thomas) \t BLAD(LU)\n");
 
 		index = 0;
-		for (double x = a; x < b; x += h)//wypisuje wyniki dla tego t
+		for (double x = a; x <= b; x += h)//wypisuje wyniki dla tego t
 		{
 			BLAD_thomas[index] = fabs(rozw_analityczne(x, t) - Uk_thomas[index]);
 			BLAD_LU[index] = fabs(rozw_analityczne(x, t) - Uk_LU[index]);
