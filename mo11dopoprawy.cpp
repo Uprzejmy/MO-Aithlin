@@ -10,7 +10,6 @@
 using namespace std;
 #pragma warning(disable:4996)
 
-//#define M_PI// 3.14159265358979323846
 #define TOL 0.0000001            //dla metody iteracyjnej LU 10 ^ -6
 #define TOLF 0.0000001
 int loop = 50;
@@ -18,7 +17,6 @@ double tmax = .5;
 double dt = 0.001;
 double h = 0.1;
 double lambda = dt / (h*h);
-
 
 double rozw_analityczne(double x, double t)
 {
@@ -58,16 +56,17 @@ double res(double * l, double *d, double *u, double *b, double *x_nowe, int rozm
 	Ax[rozmiar - 1] = fabs((l[rozmiar - 2] * x_nowe[rozmiar - 2] + d[rozmiar - 1] * x_nowe[rozmiar - 1]) - b[rozmiar - 1]);
 
 	double max = Ax[0];
-
 	for (int i = 1; i < rozmiar; i++)
 	{
 		if (Ax[i] > max) max = Ax[i];
 	}
+
 	return max;
 }
+
 double resM(double * M, double *b, double *x_nowe, int rozmiar)
 {
-
+	return 0.0;
 }
 
 double maxblad(double *BLAD_thomas, int rozmiar)
@@ -76,16 +75,14 @@ double maxblad(double *BLAD_thomas, int rozmiar)
 
 	for (int i = 1; i < rozmiar; i++)   //szukam najwiekszego bledu
 	{
-		if (BLAD_thomas[i] > max)max = BLAD_thomas[i];
+		if (BLAD_thomas[i] > max) max = BLAD_thomas[i];
 	}
 
 	return max;
 }
 
-
 void uzupelnijLDUB(double * l, double *d, double *u, double *vecb, double *Uk, int rozmiar)
 {
-	int index = 0;
 	for (int i = 0; i <rozmiar - 2; i++)
 	{
 		l[i] = lambda / 2;
@@ -105,8 +102,9 @@ void uzupelnijLDUB(double * l, double *d, double *u, double *vecb, double *Uk, i
 	}
 	d[rozmiar - 1] = 1.0 / h;
 
+	int index = 0;
 	vecb[0] = 0.0;
-	index = 0;
+
 	for (int i = 1; i < rozmiar - 1; i++)
 	{
 		vecb[i] = (-lambda / 2.)*Uk[index] - (1. - lambda)*Uk[index + 1] - 1 * (lambda / 2.)*Uk[index + 2];
@@ -115,6 +113,7 @@ void uzupelnijLDUB(double * l, double *d, double *u, double *vecb, double *Uk, i
 	vecb[rozmiar - 1] = 0;
 
 }
+
 void uzupb(double * l, double *d, double *u, double *vecb, double *Uk, int rozmiar)
 {
 	vecb[0] = 0.0;
@@ -125,9 +124,7 @@ void uzupb(double * l, double *d, double *u, double *vecb, double *Uk, int rozmi
 		index++;
 	}
 	vecb[rozmiar - 1] = 0;
-
 }
-
 
 double * AlgorytmThomasa(double * l, double *d, double *u, double *b, double *x, int rozmiar)
 {
@@ -135,15 +132,14 @@ double * AlgorytmThomasa(double * l, double *d, double *u, double *b, double *x,
 	double *bb = new double[rozmiar];
 	ni[0] = d[0];
 
-
 	for (int i = 0; i < rozmiar - 1; i++)
 	{
 		ni[i + 1] = d[i + 1] - ((l[i] * u[i]) / ni[i]);
 
 	}
+
 	bb[0] = b[0];
 	for (int i = 0; i < rozmiar - 1; i++)
-
 		bb[i + 1] = b[i + 1] - ((l[i] * bb[i]) / ni[i]);
 
 	x[rozmiar - 1] = bb[rozmiar - 1] / ni[rozmiar - 1];
@@ -152,16 +148,12 @@ double * AlgorytmThomasa(double * l, double *d, double *u, double *b, double *x,
 	{
 		x[i] = (bb[i] - u[i] * x[i + 1]) / ni[i];
 	}
-	delete[]ni;
-	delete[]bb;
+
+	delete[] ni;
+	delete[] bb;
+
 	return x;
 }
-
-
-
-
-
-
 
 void swapRows(double **matrix, int j1, int j2, double *vector, int rozmiar)
 {
@@ -178,6 +170,7 @@ void swapRows(double **matrix, int j1, int j2, double *vector, int rozmiar)
 	vector[j1] = vector[j2];
 	vector[j2] = tmp;
 }
+
 int findAbsMax(double **matrix, int i, int j, int rozmiar)
 {
 	int k = 0;
@@ -194,8 +187,6 @@ int findAbsMax(double **matrix, int i, int j, int rozmiar)
 			indexMax = k;
 		}
 	}
-
-
 
 	return indexMax;
 }
@@ -230,6 +221,7 @@ void solveUpperTriangular(double **matrix, double *x, double *b, int rozmiar)
 		x[i] = (b[i] - sum) / matrix[i][i];
 	}
 }
+
 void gaussianEliminate(double **matrix, int ip, int jp, int rozmiar)
 {
 	for (int i = ip + 1; i < rozmiar; i++)
@@ -242,6 +234,7 @@ void gaussianEliminate(double **matrix, int ip, int jp, int rozmiar)
 	}
 
 }
+
 void printMatrix(double **matrix, int rozmiar)
 {
 	int i = 0, j = 0;
@@ -257,8 +250,6 @@ void printMatrix(double **matrix, int rozmiar)
 	cout << endl << endl;
 }
 
-
-
 double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M)
 {
 	double sum = 0, *X;
@@ -267,19 +258,15 @@ double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M
 	double *xx = new double[rozmiar];
 	double *yy = new double[rozmiar];
 
-
 	for (int i = 0; i < rozmiar; i++)
 	{
-
 		if (M[i][i] == 0)
 		{
-
 			partialChoice(M, i, i, b, rozmiar);
 		}
 
 		gaussianEliminate(M, i, i, rozmiar);
 	}
-
 
 	X = new double[rozmiar];
 
@@ -291,48 +278,32 @@ double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M
 		double estymator;
 		double residuum;
 
-
-
-
 		solveLowerTriangular(M, yy, b, rozmiar);//uzupelniam yy
-
 		solveUpperTriangular(M, xx, yy, rozmiar);//uzupe³niam xx
 
 		estymator = est(X, xx);    //licze estymator jako najwieksza roznica pomiedzy odpowiednimi elementami tych wektorow
 		residuum = res(l, d, u, b, xx, rozmiar);
 
 		for (int i = 0; i < rozmiar; i++)                    //przepisuje nowowyliczone X[i] z tymczasowego wektora newX[i]
-
 		{
 			X[i] = xx[i];
 			if (fabs(X[i]) > 1000)
 			{
 				cout << 'a';
 			}
-
 		}
 
-
-
-
-
-		if (counter >= loop) {
-
+		if (counter >= loop) 
 			break;
-		}
-		if (estymator < TOL) {
 
+		if (estymator < TOL) 
 			break;
-		}
-		if (residuum < TOLF) {
-
+		
+		if (residuum < TOLF) 
 			break;
-		}
 
 		counter++;
 	}
-
-
 
 	delete[] X;
 	return xx;
@@ -356,7 +327,7 @@ void rozwiaz_rownanie(double a, double b, double h)
 		cout << "Blad otwarcia pliku" << endl;
 		return;
 	}
-	//int rozmiar = 1.0 / h;
+
 	int rozmiar = static_cast<int>(fabs(a - b) / h) + 1;
 	double *l = new double[rozmiar - 1];
 	double *d = new double[rozmiar];
@@ -369,37 +340,13 @@ void rozwiaz_rownanie(double a, double b, double h)
 	double *BLAD_LU = new double[rozmiar];
 
 	int index = 0;
-	//rozmiar = static_cast<int>(fabs(a - b) / h) + 1;       //ilosc wezlow na poziomie czasowym oraz wysokosc macierzy Thomasa
+
 	//tworze macierze l,d,u i vektor b
 	double **M = new double*[rozmiar];
 	for (int j = 0; j<rozmiar; j++)
 	{
 		M[j] = new double[rozmiar];
 	}
-
-	/*for (int k = 0; k < rozmiar; k++)
-	{
-	for (int i = 0; i < rozmiar; i++)
-	{
-
-	if (k == i + 1)
-	M[k][i] = l[i];
-	else
-	{
-	if (i == k + 1)
-	M[k][i] = u[k];
-	else
-	{
-	if (k == i)
-	M[k][i] = d[k];
-	else
-	M[k][i] = 0.0;
-	}
-	}
-	}
-	}*/
-	//printMatrix(M,rozmiar);
-
 
 	vecb = new double[rozmiar + 1];
 	double *x = new double[rozmiar + 1];
@@ -413,6 +360,7 @@ void rozwiaz_rownanie(double a, double b, double h)
 
 		index++;
 	}
+
 	uzupelnijLDUB(l, d, u, vecb, Uk_thomas, rozmiar);
 	uzupelnijLDUB(l, d, u, vecb, Uk_LU, rozmiar);
 
@@ -420,7 +368,6 @@ void rozwiaz_rownanie(double a, double b, double h)
 	{
 		for (int i = 0; i < rozmiar; i++)
 		{
-
 			if (k == i + 1)
 				M[k][i] = l[i];
 			else
@@ -441,12 +388,9 @@ void rozwiaz_rownanie(double a, double b, double h)
 	for (double t = 0; t <= tmax; t += dt)
 	{
 		uzupb(l, d, u, vecb, Uk_thomas, rozmiar);
+
 		Uk_thomas = AlgorytmThomasa(l, d, u, vecb, x, rozmiar);
-
-
 		Uk_LU = LU(l, d, u, vecb, rozmiar, M);
-
-
 
 		printf("   T\t  h\t  X  \t    THOMAS \t   LU              ANALITYCZNIE:\tBLAD(thomas) \t BLAD(LU)\n");
 
@@ -460,21 +404,20 @@ void rozwiaz_rownanie(double a, double b, double h)
 
 			//file << t << ";" << h << ";" << x << ";" << Uk_thomas[index] << ";" << Uk_LU[index] << ";" << rozw_analityczne(x, t) << ";" << BLAD_thomas[index] << ";" << BLAD_LU[index] << endl;
 			index++;
-
-
 		}
+
 		file2 << t << ";" << maxblad(BLAD_thomas, rozmiar) << ";" << maxblad(BLAD_LU, rozmiar) << ";" << endl;
 
 	}
 
 	delete[] l, d, u, vecb, Uk_thomas;
+
 	for (int i = 0; i < rozmiar; i++)
 		delete[](M[i]);
 	delete[](M);
 
 	file.close();
 	file2.close();
-
 }
 
 
