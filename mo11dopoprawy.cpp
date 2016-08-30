@@ -3,15 +3,16 @@
 #include "stdafx.h"
 
 #include<iostream>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <iostream>
 #include <fstream>
 using namespace std;
 #pragma warning(disable:4996)
 
-#define PI 3.14159265358979323846
+//#define M_PI// 3.14159265358979323846
 #define TOL 0.0000001            //dla metody iteracyjnej LU 10 ^ -6
-#define TOLF 0.000000001
+#define TOLF 0.0000001
 int loop = 50;
 double tmax = .5;
 double dt = 0.001;
@@ -21,12 +22,12 @@ double lambda = dt / (h*h);
 
 double rozw_analityczne(double x, double t)
 {
-	return 1 + exp(-1 * pow(PI, 2)*t)*cos(PI*x);
+	return 1 + exp(-1 * pow(M_PI, 2)*t)*cos(M_PI*x);
 }
 
 double war_poczatkowy(double x)
 {
-	return 1 + cos(PI*x);
+	return 1 + cos(M_PI*x);
 }
 
 double est(double *X, double *x_nowe)
@@ -63,6 +64,10 @@ double res(double * l, double *d, double *u, double *b, double *x_nowe, int rozm
 		if (Ax[i] > max) max = Ax[i];
 	}
 	return max;
+}
+double resM(double * M, double *b, double *x_nowe, int rozmiar)
+{
+
 }
 
 double maxblad(double *BLAD_thomas, int rozmiar)
@@ -258,10 +263,9 @@ double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M
 {
 	double sum = 0, *X;
 	int counter = 0;
-
+	int index = 0;
 	double *xx = new double[rozmiar];
 	double *yy = new double[rozmiar];
-
 
 
 	for (int i = 0; i < rozmiar; i++)
@@ -280,7 +284,7 @@ double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M
 	X = new double[rozmiar];
 
 	for (int i = 0; i < rozmiar; i++)//wypelniam wektor pryblizen poczatkowych
-		X[i] = xx[i];
+		X[i] = 0.0;
 
 	while (1)
 	{
@@ -290,9 +294,9 @@ double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M
 
 
 
-		solveLowerTriangular(M, yy, b, rozmiar);
+		solveLowerTriangular(M, yy, b, rozmiar);//uzupelniam yy
 
-		solveUpperTriangular(M, xx, yy, rozmiar);
+		solveUpperTriangular(M, xx, yy, rozmiar);//uzupe³niam xx
 
 		estymator = est(X, xx);    //licze estymator jako najwieksza roznica pomiedzy odpowiednimi elementami tych wektorow
 		residuum = res(l, d, u, b, xx, rozmiar);
