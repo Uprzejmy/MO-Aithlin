@@ -1,5 +1,3 @@
-//:)
-
 #include "stdafx.h"
 
 #include<iostream>
@@ -11,14 +9,19 @@
 using namespace std;
 #pragma warning(disable:4996)
 
-//double tmax = 0.1;
-//double dt = 0.01;
-//double h = 0.2;
+/*
+double tmax = 0.1;
+double dt = 0.04;
+double h = 0.2;
+*/
 
+///*
 double tmax = 0.5;
-double dt = 0.001;
+double dt = 0.01;
 double h = 0.1;
-double lambda = dt / (h*h);
+//*/
+//double lambda = dt / (h*h);
+double lambda = 1.0;
 
 double rozw_analityczne(double x, double t)
 {
@@ -90,13 +93,10 @@ void uzupelnijLDUB(double * l, double *d, double *u, double *vecb, double *Uk, i
 	}
 	d[rozmiar - 1] = 1.0 / h;
 
-	int index = 0;
 	vecb[0] = 0.0;
-
 	for (int i = 1; i < rozmiar - 1; i++)
 	{
-		vecb[i] = (-lambda / 2.0)*Uk[index] - (1.0 - lambda)*Uk[index + 1] - 1.0 * (lambda / 2.0)*Uk[index + 2];
-		index++;
+		vecb[i] = (-lambda / 2.0)*Uk[i-1] - (1.0 - lambda)*Uk[i] - (lambda / 2.0)*Uk[i + 1];
 	}
 	vecb[rozmiar - 1] = 0.0;
 
@@ -105,16 +105,14 @@ void uzupelnijLDUB(double * l, double *d, double *u, double *vecb, double *Uk, i
 void uzupb(double * l, double *d, double *u, double *vecb, double *Uk, int rozmiar)
 {
 	vecb[0] = 0.0;
-	int index = 0;
 	for (int i = 1; i < rozmiar - 1; i++)
 	{
-		vecb[i] = (-lambda / 2.)*Uk[index] - (1.0 - lambda)*Uk[index + 1] - 1.0 * (lambda / 2.0)*Uk[index + 2];
-		index++;
+		vecb[i] = (-lambda / 2.0)*Uk[i - 1] - (1.0 - lambda)*Uk[i] - (lambda / 2.0)*Uk[i + 1];
 	}
 	vecb[rozmiar - 1] = 0.0;
 }
 
-double * AlgorytmThomasa(double * l, double *d, double *u, double *b, double *x, int rozmiar)
+void AlgorytmThomasa(double * l, double *d, double *u, double *b, double *x, int rozmiar)
 {
 	double *ni = new double[rozmiar];
 	double *bb = new double[rozmiar];
@@ -140,8 +138,6 @@ double * AlgorytmThomasa(double * l, double *d, double *u, double *b, double *x,
 
 	delete[] ni;
 	delete[] bb;
-
-	return x;
 }
 
 void swapRows(double **matrix, int j1, int j2, double *vector, int rozmiar)
@@ -238,9 +234,8 @@ void printMatrix(double **matrix, int rozmiar)
 	cout << endl << endl;
 }
 
-double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M)
+void LU(double **M, double* x, double *b, int rozmiar)
 {
-	double *xx = new double[rozmiar];
 	double *yy = new double[rozmiar];
 
 	for (int i = 0; i < rozmiar; i++)
@@ -254,10 +249,9 @@ double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M
 	}
 
 	solveLowerTriangular(M, yy, b, rozmiar);//uzupelniam yy
-	solveUpperTriangular(M, xx, yy, rozmiar);//uzupe³niam xx
+	solveUpperTriangular(M, x, yy, rozmiar);//uzupe³niam xx
 
 	delete[] yy;
-	return xx;
 }
 
 void rozwiaz_rownanie(double a, double b, double h)
@@ -287,7 +281,8 @@ void rozwiaz_rownanie(double a, double b, double h)
 	double *vecb = new double[rozmiar + 1];
 	double *Uk_thomas = new double[rozmiar];
 	double *Uk_LU = new double[rozmiar];
-	double *x = new double[rozmiar + 1];
+	double *x_thomas = new double[rozmiar + 1];
+	double *x_LU = new double[rozmiar + 1];
 
 	double *BLAD_thomas = new double[rozmiar];
 	double *BLAD_LU = new double[rozmiar];
@@ -311,9 +306,10 @@ void rozwiaz_rownanie(double a, double b, double h)
 		index++;
 	}
 
+	//przygotowuje l d u do thomasa
 	uzupelnijLDUB(l, d, u, vecb, Uk_thomas, rozmiar);
-	//uzupelnijLDUB(l, d, u, vecb, Uk_LU, rozmiar);
 
+	//przygotowuje M do LU
 	for (int k = 0; k < rozmiar; k++)
 	{
 		for (int i = 0; i < rozmiar; i++)
@@ -339,10 +335,12 @@ void rozwiaz_rownanie(double a, double b, double h)
 
 	for (double t = 0.0; t <= tmax; t += dt)
 	{
+		//uzupb(l, d, u, vecb, Uk_thomas, rozmiar);
 		uzupb(l, d, u, vecb, Uk_thomas, rozmiar);
+		AlgorytmThomasa(l, d, u, vecb, Uk_thomas, rozmiar);
 
-		Uk_thomas = AlgorytmThomasa(l, d, u, vecb, x, rozmiar);
-		Uk_LU = LU(l, d, u, vecb, rozmiar, M);
+		uzupb(l, d, u, vecb, Uk_LU, rozmiar);
+		LU(M, Uk_LU, vecb, rozmiar);
 
 		printf("   T\t  h\t  X  \t    THOMAS \t   LU              ANALITYCZNIE:\tBLAD(thomas) \t BLAD(LU)\n");
 
