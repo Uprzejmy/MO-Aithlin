@@ -252,9 +252,6 @@ void printMatrix(double **matrix, int rozmiar)
 
 double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M)
 {
-	double sum = 0.0, *X;
-	int counter = 0;
-	int index = 0;
 	double *xx = new double[rozmiar];
 	double *yy = new double[rozmiar];
 
@@ -268,44 +265,10 @@ double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M
 		gaussianEliminate(M, i, i, rozmiar);
 	}
 
-	X = new double[rozmiar];
+	solveLowerTriangular(M, yy, b, rozmiar);//uzupelniam yy
+	solveUpperTriangular(M, xx, yy, rozmiar);//uzupe³niam xx
 
-	for (int i = 0; i < rozmiar; i++)//wypelniam wektor pryblizen poczatkowych
-		X[i] = 0.0;
-
-	while (1)
-	{
-		double estymator;
-		double residuum;
-
-		solveLowerTriangular(M, yy, b, rozmiar);//uzupelniam yy
-		solveUpperTriangular(M, xx, yy, rozmiar);//uzupe³niam xx
-
-		estymator = est(X, xx);    //licze estymator jako najwieksza roznica pomiedzy odpowiednimi elementami tych wektorow
-		residuum = res(l, d, u, b, xx, rozmiar);
-
-		for (int i = 0; i < rozmiar; i++)                    //przepisuje nowowyliczone X[i] z tymczasowego wektora newX[i]
-		{
-			X[i] = xx[i];
-			if (fabs(X[i]) > 1000)
-			{
-				cout << 'a';
-			}
-		}
-
-		if (counter >= loop) 
-			break;
-
-		if (estymator < TOL) 
-			break;
-		
-		if (residuum < TOLF) 
-			break;
-
-		counter++;
-	}
-
-	delete[] X;
+	delete[] yy;
 	return xx;
 }
 
