@@ -10,7 +10,7 @@ using namespace std;
 #pragma warning(disable:4996)
 
 /*
-double tmax = 0.1;
+double tmax = 0.5;
 double dt = 0.04;
 double h = 0.2;
 */
@@ -20,8 +20,7 @@ double tmax = 0.5;
 double dt = 0.01;
 double h = 0.1;
 //*/
-//double lambda = dt / (h*h);
-double lambda = 1.0;
+double lambda = dt / (h*h);
 
 double rozw_analityczne(double x, double t)
 {
@@ -32,36 +31,10 @@ double war_poczatkowy(double x)
 {
 	return 1.0 + cos(M_PI*x);
 }
-/*
-double res(double * l, double *d, double *u, double *b, double *x_nowe, int rozmiar) //przekazuje macierz A i x nowe wyliczam wektor Ax-b i licze z niego maximum czyli najwieksza bezwzgledna wartosc  tego wektora
-{
-	double *Ax = new double[rozmiar];
-
-	Ax[0] = fabs((d[0] * x_nowe[0] + u[0] * x_nowe[1]) - b[0]);
-	for (int i = 1; i <= rozmiar - 2; i++)
-	{
-		Ax[i] = fabs((l[i - 1] * x_nowe[i - 1] + d[i] * x_nowe[i] + u[i] * x_nowe[i + 1]) - b[i]);
-	}
-	Ax[rozmiar - 1] = fabs((l[rozmiar - 2] * x_nowe[rozmiar - 2] + d[rozmiar - 1] * x_nowe[rozmiar - 1]) - b[rozmiar - 1]);
-
-	double max = Ax[0];
-	for (int i = 1; i < rozmiar; i++)
-	{
-		if (Ax[i] > max) max = Ax[i];
-	}
-
-	return max;
-}
-
-double resM(double * M, double *b, double *x_nowe, int rozmiar)
-{
-	return 0.0;
-}
-*/
 
 double maxblad(double *BLAD_thomas, int rozmiar)
 {
-	double max = BLAD_thomas[1];  // omijam z warunkow brzegowych
+	double max = BLAD_thomas[0];  // omijam z warunkow brzegowych
 
 	for (int i = 1; i < rozmiar; i++)   //szukam najwiekszego bledu
 	{
@@ -72,7 +45,7 @@ double maxblad(double *BLAD_thomas, int rozmiar)
 	return max;
 }
 
-void uzupelnijLDUB(double * l, double *d, double *u, double *vecb, double *Uk, int rozmiar)
+void uzupelnijLDU(double * l, double *d, double *u, double *Uk, int rozmiar)
 {
 	for (int i = 0; i <rozmiar - 2; i++)
 	{
@@ -92,17 +65,35 @@ void uzupelnijLDUB(double * l, double *d, double *u, double *vecb, double *Uk, i
 		d[i] = -1.0*(1.0 + lambda);
 	}
 	d[rozmiar - 1] = 1.0 / h;
-
-	vecb[0] = 0.0;
-	for (int i = 1; i < rozmiar - 1; i++)
-	{
-		vecb[i] = (-lambda / 2.0)*Uk[i-1] - (1.0 - lambda)*Uk[i] - (lambda / 2.0)*Uk[i + 1];
-	}
-	vecb[rozmiar - 1] = 0.0;
-
 }
 
-void uzupb(double * l, double *d, double *u, double *vecb, double *Uk, int rozmiar)
+void uzupelnijM(double* l, double* d, double* u, double** M, int rozmiar)
+{
+	for (int k = 0; k < rozmiar; k++)
+	{
+		for (int i = 0; i < rozmiar; i++)
+		{
+			if (i == k - 1)
+			{
+				M[k][i] = l[i];
+			}
+			else if (i == k + 1)
+			{
+				M[k][i] = u[k];
+			}
+			else if (i == k)
+			{
+				M[k][i] = d[k];
+			}
+			else
+			{
+				M[k][i] = 0.0;
+			}
+		}
+	}
+}
+
+void uzupb(double *vecb, double *Uk, int rozmiar)
 {
 	vecb[0] = 0.0;
 	for (int i = 1; i < rozmiar - 1; i++)
@@ -158,14 +149,13 @@ void swapRows(double **matrix, int j1, int j2, double *vector, int rozmiar)
 
 int findAbsMax(double **matrix, int i, int j, int rozmiar)
 {
-	int k = 0;
 	int indexMax = i;
-	if (indexMax == rozmiar - 1)
+	if (indexMax >= rozmiar - 1)
 	{
 		return indexMax;
 	}
 
-	for (k = i + 1; k < rozmiar; k++)
+	for (int k = i + 1; k < rozmiar; k++)
 	{
 		if (abs(matrix[k][j]) > abs(matrix[indexMax][j]))
 		{
@@ -190,7 +180,7 @@ void solveLowerTriangular(double **matrix, double *y, double *b, int rozmiar)
 		{
 			sum += matrix[i][j] * y[j];
 		}
-		y[i] = (b[i] - sum); // /1.0 (bo na przekatnej sa jedynki)
+		y[i] = (b[i] - sum) / matrix[i][i];
 	}
 }
 
@@ -234,9 +224,30 @@ void printMatrix(double **matrix, int rozmiar)
 	cout << endl << endl;
 }
 
+void printVector(double *vector, int rozmiar)
+{
+	int i = 0;
+
+	for (i = 0; i < rozmiar; i++)
+	{
+		printf("%f ", vector[i]);
+	}
+	cout << endl << endl;
+}
+
+
 void LU(double **M, double* x, double *b, int rozmiar)
 {
-	double *yy = new double[rozmiar];
+	/*
+	cout << "Macierz M: " << endl;
+	printMatrix(M, rozmiar);
+
+	cout << "Wektor x: " << endl;
+	printVector(x, rozmiar);
+
+	cout << "Wektor b: " << endl;
+	printVector(b, rozmiar);
+	*/
 
 	for (int i = 0; i < rozmiar; i++)
 	{
@@ -248,8 +259,10 @@ void LU(double **M, double* x, double *b, int rozmiar)
 		gaussianEliminate(M, i, i, rozmiar);
 	}
 
+	double *yy = new double[rozmiar];
+
 	solveLowerTriangular(M, yy, b, rozmiar);//uzupelniam yy
-	solveUpperTriangular(M, x, yy, rozmiar);//uzupe³niam xx
+	solveUpperTriangular(M, x, yy, rozmiar);//uzupe³niam x
 
 	delete[] yy;
 }
@@ -281,8 +294,6 @@ void rozwiaz_rownanie(double a, double b, double h)
 	double *vecb = new double[rozmiar + 1];
 	double *Uk_thomas = new double[rozmiar];
 	double *Uk_LU = new double[rozmiar];
-	double *x_thomas = new double[rozmiar + 1];
-	double *x_LU = new double[rozmiar + 1];
 
 	double *BLAD_thomas = new double[rozmiar];
 	double *BLAD_LU = new double[rozmiar];
@@ -295,7 +306,7 @@ void rozwiaz_rownanie(double a, double b, double h)
 	}
 	
 
-	printf("T\t NUMERYCzNIE \t ANALITYCZNIE");
+	//printf("T\t NUMERYCzNIE \t ANALITYCZNIE");
 
 	int index = 0;
 	for (double x = a; x <= b; x += h)    //uzupelniam Uk z war poczatkowego , potrzebne do vectora b na starcie programu
@@ -307,39 +318,19 @@ void rozwiaz_rownanie(double a, double b, double h)
 	}
 
 	//przygotowuje l d u do thomasa
-	uzupelnijLDUB(l, d, u, vecb, Uk_thomas, rozmiar);
+	uzupelnijLDU(l, d, u, Uk_thomas, rozmiar);
+	uzupelnijM(l, d, u, M, rozmiar);
 
 	//przygotowuje M do LU
-	for (int k = 0; k < rozmiar; k++)
-	{
-		for (int i = 0; i < rozmiar; i++)
-		{
-			if (i == k - 1)
-			{
-				M[k][i] = l[i];
-			}
-			else if (i == k + 1)
-			{
-				M[k][i] = u[k];
-			}
-			else if (i == k)
-			{
-				M[k][i] = d[k];		
-			}
-			else
-			{
-				M[k][i] = 0.0;
-			}	
-		}
-	}
+	
 
-	for (double t = 0.0; t <= tmax; t += dt)
+	for (double t = dt; t <= tmax; t += dt)
 	{
-		//uzupb(l, d, u, vecb, Uk_thomas, rozmiar);
-		uzupb(l, d, u, vecb, Uk_thomas, rozmiar);
+		uzupb(vecb, Uk_thomas, rozmiar);
 		AlgorytmThomasa(l, d, u, vecb, Uk_thomas, rozmiar);
 
-		uzupb(l, d, u, vecb, Uk_LU, rozmiar);
+		uzupelnijM(l, d, u, M, rozmiar);
+		uzupb(vecb, Uk_LU, rozmiar);
 		LU(M, Uk_LU, vecb, rozmiar);
 
 		printf("   T\t  h\t  X  \t    THOMAS \t   LU              ANALITYCZNIE:\tBLAD(thomas) \t BLAD(LU)\n");
