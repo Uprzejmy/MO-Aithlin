@@ -5,3 +5,5 @@ Moje wątpliwości jeżeli chodzi o kod i wynikające z tego możliwe niedokład
 4. (critical!!!) W związku z pkt 3 szukałem gdzie w Thomasie jest przyblizenie początkowe. Okazuje się, że przesyłasz go do AlgorytmThomasa i to jest twoje przyblizenie początkowe wzięte z warunku brzegowego, a do LU nie wysyłasz tego x-a i nie przypisujesz go jako przybliżenie początkowe
 
 Dalej nie ma sensu chyba żebym robił cokolwiek, bo jak pozmieniasz zgodnie z pkt 3 i 4 to dużo się zmieni i prawdopodobnie to jest ten duży błąd, reszta to kosmetyka. Nie mam tutaj niestety żadnego cpp kompilatora, więc nie mam jak takich rzeczy związanych z grubym przechowywaniem w pamięci (a tym bardziej excelem) sprawdzić.
+
+raz dwa trzy
