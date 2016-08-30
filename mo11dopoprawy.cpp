@@ -13,19 +13,19 @@ using namespace std;
 #define TOL 0.0000001            //dla metody iteracyjnej LU 10 ^ -6
 #define TOLF 0.0000001
 int loop = 50;
-double tmax = .5;
+double tmax = 0.5;
 double dt = 0.001;
 double h = 0.1;
 double lambda = dt / (h*h);
 
 double rozw_analityczne(double x, double t)
 {
-	return 1 + exp(-1 * pow(M_PI, 2)*t)*cos(M_PI*x);
+	return 1.0 + exp(-1.0 * pow(M_PI, 2.0)*t)*cos(M_PI*x);
 }
 
 double war_poczatkowy(double x)
 {
-	return 1 + cos(M_PI*x);
+	return 1.0 + cos(M_PI*x);
 }
 
 double est(double *X, double *x_nowe)
@@ -85,7 +85,7 @@ void uzupelnijLDUB(double * l, double *d, double *u, double *vecb, double *Uk, i
 {
 	for (int i = 0; i <rozmiar - 2; i++)
 	{
-		l[i] = lambda / 2;
+		l[i] = lambda / 2.0;
 	}
 	l[rozmiar - 2] = -1.0 / h;
 
@@ -107,10 +107,10 @@ void uzupelnijLDUB(double * l, double *d, double *u, double *vecb, double *Uk, i
 
 	for (int i = 1; i < rozmiar - 1; i++)
 	{
-		vecb[i] = (-lambda / 2.)*Uk[index] - (1. - lambda)*Uk[index + 1] - 1 * (lambda / 2.)*Uk[index + 2];
+		vecb[i] = (-lambda / 2.0)*Uk[index] - (1.0 - lambda)*Uk[index + 1] - 1.0 * (lambda / 2.0)*Uk[index + 2];
 		index++;
 	}
-	vecb[rozmiar - 1] = 0;
+	vecb[rozmiar - 1] = 0.0;
 
 }
 
@@ -120,10 +120,10 @@ void uzupb(double * l, double *d, double *u, double *vecb, double *Uk, int rozmi
 	int index = 0;
 	for (int i = 1; i < rozmiar - 1; i++)
 	{
-		vecb[i] = (-lambda / 2.)*Uk[index] - (1. - lambda)*Uk[index + 1] - 1 * (lambda / 2.)*Uk[index + 2];
+		vecb[i] = (-lambda / 2.)*Uk[index] - (1.0 - lambda)*Uk[index + 1] - 1.0 * (lambda / 2.0)*Uk[index + 2];
 		index++;
 	}
-	vecb[rozmiar - 1] = 0;
+	vecb[rozmiar - 1] = 0.0;
 }
 
 double * AlgorytmThomasa(double * l, double *d, double *u, double *b, double *x, int rozmiar)
@@ -252,7 +252,7 @@ void printMatrix(double **matrix, int rozmiar)
 
 double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M)
 {
-	double sum = 0, *X;
+	double sum = 0.0, *X;
 	int counter = 0;
 	int index = 0;
 	double *xx = new double[rozmiar];
@@ -260,7 +260,7 @@ double * LU(double * l, double *d, double *u, double *b, int rozmiar, double **M
 
 	for (int i = 0; i < rozmiar; i++)
 	{
-		if (M[i][i] == 0)
+		if (M[i][i] == 0.0)
 		{
 			partialChoice(M, i, i, b, rozmiar);
 		}
@@ -385,7 +385,7 @@ void rozwiaz_rownanie(double a, double b, double h)
 		}
 	}
 
-	for (double t = 0; t <= tmax; t += dt)
+	for (double t = 0.0; t <= tmax; t += dt)
 	{
 		uzupb(l, d, u, vecb, Uk_thomas, rozmiar);
 
@@ -423,7 +423,7 @@ void rozwiaz_rownanie(double a, double b, double h)
 
 int main()
 {
-	rozwiaz_rownanie(0, 1, h);
+	rozwiaz_rownanie(0.0, 1.0, h);
 	getchar();
 	return 0;
 }
